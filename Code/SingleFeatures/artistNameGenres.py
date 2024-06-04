@@ -1,3 +1,5 @@
+# identical to artistName.py except removing duplicates in the artistName feature
+# aims to reduce the impact of 1-to-1 mapping of genre to artist
 from initialPreprocessing import gen_Train_and_Test, top_tracks
 import pandas as pd
 from sklearn.model_selection import train_test_split
