@@ -13,34 +13,37 @@ from initialPreprocessing import gen_Train_and_Test, top_tracks, top_n_genre_tra
 
 from track_name import process_track_names, vectorise
 
-
+# Runs various machine learning models on a given dataset and feature selection# Runs various machine learning models on a given dataset and feature selectiondef runTests(sample, featSelection,processedX=None, features=[],K=-1):
 def runTests(sample, featSelection,processedX=None, features=[],K=-1):
 
     if processedX is not None:
         if len(features)>0:
+            # Generates train and test splits using processed data and specific features
             X_train, X_test, y_train, y_test = gen_Train_and_Test(sample,'',0, processedX,features)
             print(f"\n\nTesting for Track Name and {features}")
             resultString = f"Track Name,{features}"
         else:
-            X_train, X_test, y_train, y_test = gen_Train_and_Test(sample,'',0, processedX)
+            # Generates train and test splits using only processed data
+            X_train, X_test, y_train, y_test = gen_Train_and_Test(sample, '', 0, processedX)
             print(f"\n\nTesting for Track Name")
             resultString = f"Track Name,"
-    elif len(features)>0:
-        X_train, X_test, y_train, y_test = gen_Train_and_Test(sample,'',0,None,features)
+    elif len(features) > 0:
+        # Generates train and test splits for specific features without processed data
+        X_train, X_test, y_train, y_test = gen_Train_and_Test(sample, '', 0, None, features)
         print(f"\n\nTesting for {features}")
         resultString = f"{features},"
     else:
-        X_train, X_test, y_train, y_test = gen_Train_and_Test(sample,featSelection,0)
+        # Generates train and test splits based on feature selection
+        X_train, X_test, y_train, y_test = gen_Train_and_Test(sample, featSelection, 0)
         print(f"\n\nTesting for {featSelection}")
         resultString = f"{featSelection},"
 
-    
+    # Evaluate models and append results to resultString
     nb_acc, nb_pred = nb(X_train, X_test, y_train, y_test)
     sgd_acc, sgd_pred = sgd(X_train, X_test, y_train, y_test)
-    if K<0:
+    if K < 0:
         knn_acc, knn_pred, knn_bestk = knn(X_train, X_test, y_train, y_test)
     else:
-        # knn_acc, knn_pred, knn_bestk = knn(X_train, X_test, y_train, y_test,"",K)
         knn_acc = 0.00
         knn_bestk = "NA"
 
@@ -48,224 +51,243 @@ def runTests(sample, featSelection,processedX=None, features=[],K=-1):
     print(resultString)
     return resultString
 
-def Boost(sample, featSelection,processedX=None, features=[],K=1,hard=True):
-
+# Builds ensemble classifiers and evaluates their performance
+def Boost(sample, featSelection, processedX=None, features=[], K=1, hard=True):
     resultString = ''
     if processedX is not None:
-        if len(features)>0:
-            X_train, X_test, y_train, y_test = gen_Train_and_Test(sample,'',0, processedX,features)
+        if len(features) > 0:
+            # Builds models with processed data and specific features
+            X_train, X_test, y_train, y_test = gen_Train_and_Test(sample, '', 0, processedX, features)
             print(f"\n\nBuilding for Track Name and {features}")
             resultString = f"Track Name,{features}"
         else:
-            X_train, X_test, y_train, y_test = gen_Train_and_Test(sample,'',0, processedX)
+            # Builds models using only processed data
+            X_train, X_test, y_train, y_test = gen_Train_and_Test(sample, '', 0, processedX)
             print(f"\n\nBuilding for Track Name")
             resultString = f"Track Name,"
-    elif len(features)>0:
-        X_train, X_test, y_train, y_test = gen_Train_and_Test(sample,'',0,None,features)
+    elif len(features) > 0:
+        # Builds models for specific features without processed data
+        X_train, X_test, y_train, y_test = gen_Train_and_Test(sample, '', 0, None, features)
         print(f"\n\nBuilding for {features}")
-        # resultString = f"{features},"
     else:
-        X_train, X_test, y_train, y_test = gen_Train_and_Test(sample,featSelection,0)
+        # Builds models based on feature selection
+        X_train, X_test, y_train, y_test = gen_Train_and_Test(sample, featSelection, 0)
         print(f"\n\nBuilding for {featSelection}")
         resultString = f"{featSelection},"
 
-    
+    # Train individual classifiers
     nb_clf, nb_pred = nb_(X_train, X_test, y_train, y_test)
-    sgd_clf, sgd_pred = sgd_(X_train, X_test, y_train, y_test,hard)
-    knn_clf, knn_pred = knn_(X_train, X_test, y_train, y_test,K)
+    sgd_clf, sgd_pred = sgd_(X_train, X_test, y_train, y_test, hard)
+    knn_clf, knn_pred = knn_(X_train, X_test, y_train, y_test, K)
 
-    voting_type = 'soft'
-    if hard == True:
-        voting_type = 'hard'
-
+    # Create and evaluate a voting ensemble classifier
+    voting_type = 'soft' if not hard else 'hard'
     voting_clf = VotingClassifier(
         estimators=[('knn', knn_clf), ('sgd', sgd_clf), ('nb', nb_clf)],
         voting=voting_type
     )
-
     voting_clf.fit(X_train, y_train)
     y_pred = voting_clf.predict(X_test)
 
+    # Print accuracy and classification report for the ensemble
     accuracy = accuracy_score(y_test, y_pred)
-    report = classification_report(y_test, y_pred, zero_division=0) # Generate report of the values
-    
-    # Print the results
+    report = classification_report(y_test, y_pred, zero_division=0)
     print("Ensemble")
     print(f"Accuracy: {accuracy:.2f}")
     print("Classification Report:")
     print(report)
 
-    resultString+=f"{accuracy:.2f}\n"
+    resultString += f"{accuracy:.2f}\n"
     return resultString
 
-
-
+# Runs tests for single features across multiple datasets
 def runSingleFeatures(datasetindex=0):
-    tracks = top_tracks_final()
-
+    tracks = top_tracks_final() # Load dataset of top tracks
     fullResults = ""
 
     for i in range(4):
-        fullResults += "DATASET "+str(i) +"\n"
+        fullResults += "DATASET " + str(i) + "\n"
+        # Define features based on dataset index
         if i == 1 or i == 3:
-            single_feats = ['track_duration','track_listens','track_favorites','days_since_first']
+            single_feats = ['track_duration', 'track_listens', 'track_favorites', 'days_since_first']
         else:
-            single_feats = ['track_duration','track_listens','track_favorites']
-    
+            single_feats = ['track_duration', 'track_listens', 'track_favorites']
 
+        # Run tests for each feature in the current dataset
         for feat in single_feats:
-            fullResults+=runTests(tracks[i],feat)
+            fullResults += runTests(tracks[i], feat)
         
-        fullResults+="\n"
-
-
-    
-    print(fullResults)
-
-def boostSingleFeatures(datasetindex=0):
-    tracks = top_tracks_final()
-
-    fullResults = ""
-
-    bestks = [[153,107,115],[41,35,15,3],[77,73,65],[37,33,31,1]]
-    for i in range(4):
-        fullResults += "DATASET "+str(i) +"\n"
-        if i == 1 or i == 3:
-            single_feats = ['track_duration','track_listens','track_favorites','days_since_first']
-        else:
-            single_feats = ['track_duration','track_listens','track_favorites']
-    
-        j = 0
-        for feat in single_feats:
-            fullResults+=Boost(tracks[i],feat,None,[],bestks[i][j])
-            j+=1
-        
-        fullResults+="\n"
-
-
-    
-    print(fullResults)
-
-def runSingleEchoFeatures(datasetindex=0):
-    tracks = top_tracks_final()
-
-    single_features = ['echonest_acousticness','echonest_danceability','echonest_energy','echonest_instrumentalness','echonest_liveness','echonest_speechiness','echonest_tempo','echonest_valence']
-
-    fullResults = "\n DATASET 2 \n"
-
-    for feat in single_features:
-        fullResults+=runTests(tracks[2],feat)
-        
-    fullResults+="\n DATASET 3 \n"
-
-    for feat in single_features:
-        fullResults+=runTests(tracks[3],feat)
-        
-    fullResults+="\n"
-    
-    print(fullResults)
-
-def runTrackName():
-    tracks = top_tracks_final()
-
-    fullResults = ""
-
-    for i in range(4):
-        fullResults += "\n DATASET "+str(i)+"\n"
-        sample = process_track_names(tracks[i], True, False, False)
-        vec_sample = vectorise(sample,'tfidf')
-        fullResults += runTests(tracks[i],"",vec_sample)
-
         fullResults += "\n"
 
     print(fullResults)
 
+# Runs boosting models on single features across datasets
+def boostSingleFeatures(datasetindex=0):
+    tracks = top_tracks_final()  # Load dataset of top tracks
+    fullResults = ""
+
+    # Predefined best k-values for KNN models for each dataset and feature
+    bestks = [[153, 107, 115], [41, 35, 15, 3], [77, 73, 65], [37, 33, 31, 1]]
+
+    for i in range(4):
+        fullResults += "DATASET " + str(i) + "\n"
+        # Define features based on dataset index
+        if i == 1 or i == 3:
+            single_feats = ['track_duration', 'track_listens', 'track_favorites', 'days_since_first']
+        else:
+            single_feats = ['track_duration', 'track_listens', 'track_favorites']
+        
+        # Apply Boost function to each feature
+        j = 0
+        for feat in single_feats:
+            fullResults += Boost(tracks[i], feat, None, [], bestks[i][j])
+            j += 1
+        
+        fullResults += "\n"
+
+    print(fullResults)
+
+# Runs tests for Echonest features on specific datasets
+def runSingleEchoFeatures(datasetindex=0):
+    tracks = top_tracks_final()  # Load dataset of top tracks
+
+    single_features = [
+        'echonest_acousticness', 'echonest_danceability', 'echonest_energy',
+        'echonest_instrumentalness', 'echonest_liveness', 'echonest_speechiness',
+        'echonest_tempo', 'echonest_valence'
+    ]
+
+    fullResults = "\n DATASET 2 \n"
+
+    # Run tests for Echonest features in dataset 2
+    for feat in single_features:
+        fullResults += runTests(tracks[2], feat)
+        
+    fullResults += "\n DATASET 3 \n"
+
+    # Run tests for Echonest features in dataset 3
+    for feat in single_features:
+        fullResults += runTests(tracks[3], feat)
+        
+    fullResults += "\n"
+
+    print(fullResults)
+
+# Runs tests using track name features across datasets
+def runTrackName():
+    tracks = top_tracks_final()  # Load dataset of top tracks
+    fullResults = ""
+
+    for i in range(4):
+        fullResults += "\n DATASET " + str(i) + "\n"
+        sample = process_track_names(tracks[i], True, False, False)  # Process track name features
+        vec_sample = vectorise(sample, 'tfidf')  # Vectorize features using TF-IDF
+        fullResults += runTests(tracks[i], "", vec_sample)  # Run tests with vectorized data
+        fullResults += "\n"
+
+    print(fullResults)
+
+# Generates all possible feature combinations of a given feature list
 def generate_feature_combos(features):
     combos = []
     for r in range(2, len(features) + 1):
+        # Generate combinations of features with size r
         combos.extend(combinations(features, r))
     return combos
 
+# Runs tests on all feature combinations across datasets
 def runFeatureCombos():
-    tracks = top_tracks_final()
-
+    tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
 
     for i in range(4):
-        fullResults += "DATASET "+str(i) +"\n"
+        fullResults += "DATASET " + str(i) + "\n"
+        # Define features based on dataset index
         if i == 1 or i == 3:
-            single_feats = ['track_duration','track_listens','track_favorites','days_since_first']
+            single_feats = ['track_duration', 'track_listens', 'track_favorites', 'days_since_first']
         else:
-            single_feats = ['track_duration','track_listens','track_favorites']
-    
-        feat_combos = generate_feature_combos(single_feats)
+            single_feats = ['track_duration', 'track_listens', 'track_favorites']
 
+        feat_combos = generate_feature_combos(single_feats)  # Generate combinations of features
+
+        # Run tests for each feature combination
         for feat in feat_combos:
-            fullResults+=runTests(tracks[i],'',None,np.array(feat))
+            fullResults += runTests(tracks[i], '', None, np.array(feat))
         
-        fullResults+="\n"
+        fullResults += "\n"
 
-
-    
     print(fullResults)
 
+# Builds and evaluates boosting models on feature combinations across datasets
 def boostSimpleFeatures(hard=True):
-    tracks = top_tracks_final()
-
+    tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
 
-    bestks = [[79,131,145,79],[45,41,31,13,1,1,35,33,37,7,29],[69,59,65,73],[31,29,19,19,1,1,29,13,17,9,11]]
-    for i in range(4):
-        fullResults += "DATASET "+str(i) +"\n"
-        if i == 1 or i == 3:
-            single_feats = ['track_duration','track_listens','track_favorites','days_since_first']
-        else:
-            single_feats = ['track_duration','track_listens','track_favorites']
-    
-        feat_combos = generate_feature_combos(single_feats)
+    # Predefined best k-values for each dataset and feature combination
+    bestks = [
+        [79, 131, 145, 79], [45, 41, 31, 13, 1, 1, 35, 33, 37, 7, 29],
+        [69, 59, 65, 73], [31, 29, 19, 19, 1, 1, 29, 13, 17, 9, 11]
+    ]
 
+    for i in range(4):
+        fullResults += "DATASET " + str(i) + "\n"
+        # Define features based on dataset index
+        if i == 1 or i == 3:
+            single_feats = ['track_duration', 'track_listens', 'track_favorites', 'days_since_first']
+        else:
+            single_feats = ['track_duration', 'track_listens', 'track_favorites']
+
+        feat_combos = generate_feature_combos(single_feats)  # Generate combinations of features
+
+        # Apply Boost function to each feature combination
         j = 0
         for feat in feat_combos:
-            fullResults+=Boost(tracks[i],'',None,np.array(feat),bestks[i][j],hard)
+            fullResults += Boost(tracks[i], '', None, np.array(feat), bestks[i][j], hard)
+            j += 1
         
-        fullResults+="\n"
+        fullResults += "\n"
 
-
-    
     print(fullResults)
 
+# Runs tests on combinations of EchoNest features across multiple datasets
 def runEchoFeatureCombos():
-    tracks = top_tracks_final()
-
+    tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
 
     for i in range(4):
-        fullResults += "DATASET "+str(i) +"\n"
+        fullResults += "DATASET " + str(i) + "\n"
         if i == 2 or i == 3:
-            single_feats = ['echonest_acousticness','echonest_danceability','echonest_energy','echonest_instrumentalness','echonest_liveness','echonest_speechiness','echonest_tempo','echonest_valence']
+            # Define EchoNest features for datasets 2 and 3
+            single_feats = [
+                'echonest_acousticness', 'echonest_danceability', 'echonest_energy',
+                'echonest_instrumentalness', 'echonest_liveness', 'echonest_speechiness',
+                'echonest_tempo', 'echonest_valence'
+            ]
         else:
             continue
-    
+
+        # Generate all combinations of the features
         feat_combos = generate_feature_combos(single_feats)
 
+        # Run tests for each combination
         for feat in feat_combos:
-            fullResults+=runTests(tracks[i],'',None,np.array(feat))
+            fullResults += runTests(tracks[i], '', None, np.array(feat))
         
-        fullResults+="\n"
-
-
+        fullResults += "\n"
     
     print(fullResults)
 
+# Builds ensemble models using EchoNest feature combinations and evaluates their performance
 def boostEchoFeatures(hard=True):
-    tracks = top_tracks_final()
-
+    tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
+    # Predefined best 'k' values for KNN across datasets
     bestks = [[],[],[77, 41, 41, 39, 47, 29, 23, 43, 39, 21, 39, 19, 17, 17, 29, 21, 29, 13, 37, 15, 23],[21, 17, 17, 19, 15, 17, 11, 23, 9, 29, 11, 15, 9, 13, 9, 13, 13, 19, 11, 9, 11]]
        
     for i in range(4):
         fullResults += "DATASET "+str(i) +"\n"
         if i == 2:
+            # Define feature combinations for ensemble models
             feat_combos = [
                 ['echonest_acousticness', 'echonest_danceability', 'echonest_energy'],
                 ['echonest_acousticness', 'echonest_danceability', 'echonest_energy', 'echonest_speechiness'],
@@ -317,7 +339,7 @@ def boostEchoFeatures(hard=True):
         else:
             continue
 
-        
+        # Run Boost with each feature combination
         j=0
         for feat in feat_combos:
             fullResults+=Boost(tracks[i],'',None,np.array(feat),bestks[i][j],hard)
@@ -328,15 +350,17 @@ def boostEchoFeatures(hard=True):
     
     print(fullResults)
 
+# Runs tests on combined EchoNest and simple features, excluding redundant combinations
 def runEchoPlusSimpleFeatureCombos():
-    tracks = top_tracks_final()
-
+    tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
 
-    with open('results.txt','w') as file:
+    with open('results.txt', 'w') as file:
         for i in range(4):
-            fullResults += "DATASET "+str(i) +"\n"
-            file.write("DATASET "+str(i) +"\n")
+            fullResults += "DATASET " + str(i) + "\n"
+            file.write("DATASET " + str(i) + "\n")
+
+            # Define EchoNest and simple features based on dataset
             echo_feats = ['echonest_acousticness','echonest_danceability','echonest_energy','echonest_instrumentalness','echonest_liveness','echonest_speechiness','echonest_tempo','echonest_valence']
 
             if i == 3:
@@ -373,38 +397,36 @@ def runEchoPlusSimpleFeatureCombos():
             file.write("\n")
             fullResults+="\n"
 
-
-    
     # print(fullResults)
 
+# Runs tests on datasets using track names and feature combinations
 def runSimpleAndTrackName():
-    tracks = top_tracks_final()
-
+    tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
 
     for i in range(4):
-        fullResults += "\n DATASET "+str(i)+"\n"
-        sample = process_track_names(tracks[i], True, False, False)
-        vec_sample = vectorise(sample,'tfidf')
-        
+        fullResults += "\n DATASET " + str(i) + "\n"
+        sample = process_track_names(tracks[i], True, False, False)  # Process track names for the dataset
+        vec_sample = vectorise(sample, 'tfidf')  # Vectorize the sample using TF-IDF
+
+        # Define features based on dataset index
         if i == 1 or i == 3:
-            single_feats = ['track_duration','track_listens','track_favorites','days_since_first']
+            single_feats = ['track_duration', 'track_listens', 'track_favorites', 'days_since_first']
         else:
-            single_feats = ['track_duration','track_listens','track_favorites']
-    
+            single_feats = ['track_duration', 'track_listens', 'track_favorites']
+
+        # Generate combinations of features for testing
         feat_combos = generate_feature_combos(single_feats)
 
         for feat in feat_combos:
-            fullResults+=runTests(tracks[i],'',vec_sample,np.array(feat),1)
-        
-        fullResults+="\n"
-        
-        # fullResults += runTests(tracks[i],"",vec_sample)
+            # Run tests on each feature combination and append results
+            fullResults += runTests(tracks[i], '', vec_sample, np.array(feat), 1)
 
-        # fullResults += "\n"
+        fullResults += "\n"
 
     print(fullResults)
 
+# Uses optimal feature combinations and ensemble classifiers for boosting performance
 def boostOptimalFeatures(hard=True):
     tracks = top_tracks_final()
 
@@ -452,22 +474,18 @@ def boostOptimalFeatures(hard=True):
 
         else:
             continue
-
-        
         j=0
         for feat in feat_combos:
             fullResults+=Boost(tracks[i],'',None,np.array(feat),bestks[i][j],hard)
             j+=1
         
         fullResults+="\n"
-
     
     print(fullResults)
 
 def boost():
     print("TRYING TO BOOST")
 
-    
 # runSimpleAndTrackName()
 
 # runSingleFeatures()
@@ -480,7 +498,3 @@ boostOptimalFeatures(True)
 
 
 # runEchoPlusSimpleFeatureCombos()
-
-
-
-
