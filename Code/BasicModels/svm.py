@@ -1,3 +1,18 @@
+"""
+Purpose: Implements Support Vector Machine classification using sklearn's SVC with linear kernel
+         for multi-class music genre classification.
+
+Key Functions:
+- svm(X_train, X_test, y_train, y_test, desc=""): 
+    Implements linear SVM classification with comprehensive metrics reporting.
+    Returns predictions and prints accuracy and classification report.
+
+Notes:
+- Handles multi-class classification with built-in one-vs-rest approach
+- Fixed random state (42) for reproducibility
+- Uses LabelEncoder for consistent class label handling
+"""
+
 from sklearn.svm import SVC
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, classification_report

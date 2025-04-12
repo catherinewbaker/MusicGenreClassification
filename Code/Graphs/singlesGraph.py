@@ -1,3 +1,14 @@
+"""
+Purpose: Generates bar graph visualization comparing model performance (NB, SGD, KNN) across 
+         different feature types (Simple vs EchoNest), including both average and date-specific results.
+
+Output: Side-by-side comparison of Simple vs EchoNest features
+- Single figure with:
+    - Grouped bar chart showing average performance
+    - Overlaid scatter points for date-specific results
+    - Clear legend and labels for easy interpretation
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 

@@ -1,3 +1,15 @@
+"""
+Purpose: Evaluates track duration as a single feature for genre classification using
+         multiple machine learning models to assess its predictive power.
+
+Key Functions:
+- main(): Processes track duration data and evaluates classification performance
+          using multiple models (Naive Bayes, KNN, SGD)
+
+Notes:
+- Implements multiple classification algorithms for comparison
+"""
+
 from initialPreprocessing import gen_Train_and_Test, top_tracks, top_n_genre_tracks, top_echonest_tracks, top_tracks_final
 import pandas as pd
 from svm import svm

@@ -1,3 +1,12 @@
+"""
+Purpose: Creates side-by-side box plots comparing model performance distributions (NB, SGD, KNN) 
+         across Simple and EchoNest feature sets, with MinMax scaling for fair comparison.
+
+Key Components:
+    - Applies MinMaxScaler for normalized comparison
+    - Dual box plots with notches for statistical significance
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler

@@ -1,11 +1,24 @@
+"""
+Purpose: Processes and vectorizes track names for music classification using various text preprocessing techniques
+         and machine learning models (KNN, Naive Bayes, SGD)
+
+Key Functions:
+- process_track_names(): Preprocesses track titles with options for lowercase conversion, stopword removal, and punctuation handling
+- vectorise(): Converts processed text to numerical features using either TF-IDF or Bag of Words
+- run_mega(): Runs multiple machine learning models on the processed and vectorized data
+
+Notes:
+- Implements multiple text preprocessing combinations (with/without stopwords, punctuation)
+- Uses NLTK for text processing and scikit-learn for vectorization
+- Supports both TF-IDF and Bag of Words (BOW) vectorization approaches
+"""
+
 from initialPreprocessing import gen_Train_and_Test, top_tracks
 import pandas as pd
 from svm import svm
 from knn import knn
 from nb import nb
 from sgd import sgd
-
-# will need to install nltk
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize

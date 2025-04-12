@@ -1,3 +1,17 @@
+"""
+Purpose: Analyzes track recording dates as a feature for genre classification by
+         converting dates to numerical values (days since earliest recording) and
+         applying various machine learning models.
+
+Key Functions:
+- gen_Train_and_Test(): Processes recording dates and generates train/test splits
+                        by converting dates to days-since-first-recording metric
+
+Notes:
+- Handles datetime conversion and normalization
+- Implements data cleaning for null date values
+"""
+
 from initialPreprocessing import top_tracks
 from sklearn.model_selection import train_test_split
 import pandas as pd
@@ -17,6 +31,7 @@ def gen_Train_and_Test(data, feature, subset):
 
     # Calculate the number of days since the first date in the dataset
     min_date = dataset[feature].min()
+    # Fill in each row with the number of days since the first date in the dataset
     dataset['days_since_first'] = (dataset[feature] - min_date).dt.days
 
     # Select the new feature 'days_since_first' for X

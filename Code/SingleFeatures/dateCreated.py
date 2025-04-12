@@ -1,3 +1,18 @@
+"""
+Purpose: Analyzes track creation dates as a feature for genre classification by
+         converting dates to numerical values (days since earliest track) and
+         applying various machine learning models.
+
+Key Functions:
+- gen_Train_and_Test(): Processes date features and generates train/test splits
+                        by converting dates to days-since-first-track metric
+
+Notes:
+- Handles datetime conversion and normalization
+- Implements data cleaning for null date values
+- Supports optional dataset subsetting for experimentation
+"""
+
 from initialPreprocessing import top_tracks
 from sklearn.model_selection import train_test_split
 import pandas as pd

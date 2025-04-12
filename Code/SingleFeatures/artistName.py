@@ -1,3 +1,18 @@
+"""
+Purpose: Processes and analyzes artist names for music genre classification using
+         text preprocessing and various machine learning models.
+
+Key Functions:
+    - process_artist_names(): Preprocesses artist names with options for case conversion,
+            stopword removal, and punctuation handling
+    - vectorise(): Converts processed text to numerical features using TF-IDF or Bag of Words
+    - run_mega(): Executes multiple machine learning models (KNN, NB, SGD) on processed data
+
+Notes:
+    - Uses NLTK for text processing (tokenization, stemming, stopwords)
+    - Supports both TF-IDF and Bag of Words (BOW) vectorization
+"""
+
 from initialPreprocessing import gen_Train_and_Test, top_tracks
 import pandas as pd
 from svm import svm
@@ -59,6 +74,7 @@ def vectorise(titles, method):
 def run_mega(sample, processed ,descText):
     X_train, X_test, y_train, y_test = gen_Train_and_Test(sample,'',0, processed)
 
+    # testing knn with multiple 
     # knn(X_train, X_test, y_train, y_test,descText,1)
     # # knn(X_train, X_test, y_train, y_test,descText,3)
     # # knn(X_train, X_test, y_train, y_test,descText,5)

@@ -1,3 +1,19 @@
+"""
+Purpose: Evaluates normalized track duration as a single feature for genre classification,
+         using StandardScaler for feature normalization before applying ML models.
+
+Key Functions:
+- main(): Processes and normalizes track duration data, then evaluates classification
+          performance using multiple models (Naive Bayes, KNN)
+
+Notes:
+- Extends duration.py by adding feature normalization
+- Uses StandardScaler for feature normalization
+- Implements multiple classification algorithms for comparison
+- Part of the single-feature analysis pipeline
+- Helps understand if normalized duration values improve classification accuracy
+"""
+
 from sklearn.preprocessing import StandardScaler
 from initialPreprocessing import gen_Train_and_Test, top_tracks
 import pandas as pd

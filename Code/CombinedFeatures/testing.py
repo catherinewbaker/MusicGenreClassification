@@ -1,3 +1,40 @@
+"""
+Purpose: Comprehensive testing framework for music genre classification, implementing single-feature, 
+         multi-feature, and ensemble model evaluations across different feature combinations including 
+         track metadata, EchoNest features, and track names.
+
+Key Functions:
+- runTests(sample, featSelection, processedX=None, features=[], K=-1):
+    Executes individual model tests (NB, SGD, KNN) on specified feature combinations.
+    Returns formatted result string with accuracies.
+
+- ensembleVoting(sample, featSelection, processedX=None, features=[], K=1, hard=True):
+    Implements ensemble voting classifier combining NB, SGD, and KNN.
+    Supports both hard and soft voting strategies.
+
+- Feature-Specific Test Functions:
+    - runSingleFeatures(): Tests individual track metadata features
+    - runSingleEchoFeatures(): Tests individual EchoNest audio features
+    - runTrackName(): Tests track name text features
+    - runFeatureCombos(): Tests combinations of track metadata features
+    - runEchoFeatureCombos(): Tests combinations of EchoNest features
+    - runSimpleAndTrackName(): Tests combinations of track metadata and track names
+    - runEchoPlusSimpleFeatureCombos(): Tests combinations across all feature types
+
+- Ensemble-Specific Functions:
+    - boostSimpleFeatures(): Ensemble models for track metadata combinations
+    - boostEchoFeatures(): Ensemble models for EchoNest feature combinations
+    - boostOptimalFeatures(): Ensemble models using best-performing feature combinations
+
+Helper Functions:
+- generate_feature_combos(): Generates all possible feature combinations
+
+Notes:
+- Implements a Voting Classifier to combine predictions from our 3 models (each trained on the same features)
+- Supports both individual model testing and ensemble methods
+- Handles various data preprocessing scenarios including text vectorization
+"""
+
 from knn import knn, knn_
 from nb import nb, nb_
 from sgd import sgd, sgd_
@@ -13,7 +50,8 @@ from initialPreprocessing import gen_Train_and_Test, top_tracks, top_n_genre_tra
 
 from track_name import process_track_names, vectorise
 
-# Runs various machine learning models on a given dataset and feature selection# Runs various machine learning models on a given dataset and feature selectiondef runTests(sample, featSelection,processedX=None, features=[],K=-1):
+# Runs various machine learning models on a given dataset and with a given selection of features
+# generates train and test splits, evaluates models, and returns a formatted result string with accuracies
 def runTests(sample, featSelection,processedX=None, features=[],K=-1):
 
     if processedX is not None:
@@ -51,8 +89,9 @@ def runTests(sample, featSelection,processedX=None, features=[],K=-1):
     print(resultString)
     return resultString
 
-# Builds ensemble classifiers and evaluates their performance
-def Boost(sample, featSelection, processedX=None, features=[], K=1, hard=True):
+# Builds ensemble classifiers (using hard voting and VotingClassifier to combine predictions from our 3 models) and evaluates their performance
+# returns accuracy of ensemble model
+def ensembleVoting(sample, featSelection, processedX=None, features=[], K=1, hard=True):
     resultString = ''
     if processedX is not None:
         if len(features) > 0:
@@ -100,7 +139,8 @@ def Boost(sample, featSelection, processedX=None, features=[], K=1, hard=True):
     resultString += f"{accuracy:.2f}\n"
     return resultString
 
-# Runs tests for single features across multiple datasets
+# Runs tests for single features for numerical data across multiple datasets
+# prints the results
 def runSingleFeatures(datasetindex=0):
     tracks = top_tracks_final() # Load dataset of top tracks
     fullResults = ""
@@ -121,7 +161,8 @@ def runSingleFeatures(datasetindex=0):
 
     print(fullResults)
 
-# Runs boosting models on single features across datasets
+# Runs boosting models on single features across datasets, uses pre-defined k values
+# prints the dataset index and results for each feature boosted
 def boostSingleFeatures(datasetindex=0):
     tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
@@ -140,14 +181,15 @@ def boostSingleFeatures(datasetindex=0):
         # Apply Boost function to each feature
         j = 0
         for feat in single_feats:
-            fullResults += Boost(tracks[i], feat, None, [], bestks[i][j])
+            fullResults += ensembleVoting(tracks[i], feat, None, [], bestks[i][j])
             j += 1
         
         fullResults += "\n"
 
     print(fullResults)
 
-# Runs tests for Echonest features on specific datasets
+# Runs tests for single Echonest features on specific datasets
+# prints the dataset index and results for each echonest feature
 def runSingleEchoFeatures(datasetindex=0):
     tracks = top_tracks_final()  # Load dataset of top tracks
 
@@ -174,6 +216,7 @@ def runSingleEchoFeatures(datasetindex=0):
     print(fullResults)
 
 # Runs tests using track name features across datasets
+# prints the dataset index and results for each track name feature
 def runTrackName():
     tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
@@ -188,6 +231,7 @@ def runTrackName():
     print(fullResults)
 
 # Generates all possible feature combinations of a given feature list
+# returns a list of tuples of feature combinations
 def generate_feature_combos(features):
     combos = []
     for r in range(2, len(features) + 1):
@@ -196,6 +240,7 @@ def generate_feature_combos(features):
     return combos
 
 # Runs tests on all feature combinations across datasets
+# prints the dataset index and results for each feature combination
 def runFeatureCombos():
     tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
@@ -219,6 +264,7 @@ def runFeatureCombos():
     print(fullResults)
 
 # Builds and evaluates boosting models on feature combinations across datasets
+# prints the dataset index and results for each feature combination boosted
 def boostSimpleFeatures(hard=True):
     tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
@@ -242,7 +288,7 @@ def boostSimpleFeatures(hard=True):
         # Apply Boost function to each feature combination
         j = 0
         for feat in feat_combos:
-            fullResults += Boost(tracks[i], '', None, np.array(feat), bestks[i][j], hard)
+            fullResults += ensembleVoting(tracks[i], '', None, np.array(feat), bestks[i][j], hard)
             j += 1
         
         fullResults += "\n"
@@ -250,6 +296,7 @@ def boostSimpleFeatures(hard=True):
     print(fullResults)
 
 # Runs tests on combinations of EchoNest features across multiple datasets
+# prints the dataset index and results for each echonest feature combination
 def runEchoFeatureCombos():
     tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
@@ -342,7 +389,7 @@ def boostEchoFeatures(hard=True):
         # Run Boost with each feature combination
         j=0
         for feat in feat_combos:
-            fullResults+=Boost(tracks[i],'',None,np.array(feat),bestks[i][j],hard)
+            fullResults+=ensembleVoting(tracks[i],'',None,np.array(feat),bestks[i][j],hard)
             j+=1
         
         fullResults+="\n"
@@ -351,6 +398,7 @@ def boostEchoFeatures(hard=True):
     print(fullResults)
 
 # Runs tests on combined EchoNest and simple features, excluding redundant combinations
+# prints the dataset index and results for each feature combination
 def runEchoPlusSimpleFeatureCombos():
     tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
@@ -400,6 +448,7 @@ def runEchoPlusSimpleFeatureCombos():
     # print(fullResults)
 
 # Runs tests on datasets using track names and feature combinations
+# prints the dataset index and results for each feature combination
 def runSimpleAndTrackName():
     tracks = top_tracks_final()  # Load dataset of top tracks
     fullResults = ""
@@ -426,7 +475,8 @@ def runSimpleAndTrackName():
 
     print(fullResults)
 
-# Uses optimal feature combinations and ensemble classifiers for boosting performance
+# Uses optimal feature combinations (found through trial and error) and ensemble classifiers for boosting performance
+# prints the dataset index and results for each feature combination boosted
 def boostOptimalFeatures(hard=True):
     tracks = top_tracks_final()
 
@@ -476,7 +526,7 @@ def boostOptimalFeatures(hard=True):
             continue
         j=0
         for feat in feat_combos:
-            fullResults+=Boost(tracks[i],'',None,np.array(feat),bestks[i][j],hard)
+            fullResults+=ensembleVoting(tracks[i],'',None,np.array(feat),bestks[i][j],hard)
             j+=1
         
         fullResults+="\n"
@@ -495,6 +545,5 @@ def boost():
 # boostSimpleFeatures(True)
 # boostEchoFeatures(True)
 boostOptimalFeatures(True)
-
 
 # runEchoPlusSimpleFeatureCombos()

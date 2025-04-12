@@ -1,3 +1,16 @@
+"""
+Purpose: Testing different multi-feature model combinations and configurations with simple meta data
+
+Key Configurations:
+  - Data Selection
+  - Feature Combinations
+  - Model Selection:
+
+Notes:
+- Current active configuration uses basic track features plus days_since_first
+- Other configurations are preserved as commented options for easy switching
+"""
+
 from initialPreprocessing import gen_Train_and_Test, top_tracks, top_echonest_tracks, top_n_genre_tracks
 import pandas as pd
 from svm import svm

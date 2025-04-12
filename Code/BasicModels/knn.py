@@ -1,16 +1,32 @@
+"""
+Purpose: Implements K-Nearest Neighbors classification for music genre prediction, featuring both fixed-k 
+         and automatic k-value optimization through grid search cross-validation.
+
+Key Functions:
+- knn(X_train, X_test, y_train, y_test, desc="", N=-1): 
+    Main implementation with automatic k optimization. When N=-1 (default), performs grid search to find optimal k.
+    Returns accuracy, predictions, and best k value.
+
+- knn_(X_train, X_test, y_train, y_test, K): 
+    Simplified version with fixed K value.
+    Returns classifier and predictions without metrics.
+
+Notes:
+- Adaptive k-value range based on dataset size (sqrt of training samples)
+- Performance optimization for high-dimensional data (>50 features)
+"""
+
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import GridSearchCV
 
 import numpy as np
 
-# default is now for it to search for best value of k, if you want to change this behaviour then need to change N=-1 to N= chosen number of k neighbours
+# The knn function implements KNN with automatic k optimization and full metrics reporting
 def knn(X_train, X_test, y_train, y_test, desc="", N=-1):
-
     bestN = -1
 
-    # Think this is basically a reimplementation of what you did before, but this way you can specify if you want to seek the best k
-    # This is basically a like nested CV lite so we definitely should investigate doing that for any final implementation we do
+    # Smaller nested CV - finds the best k value for high or low dimensional data
     if N<0:
         sqrt_sample_size = int(np.sqrt(X_train.shape[0]))
 
@@ -75,6 +91,7 @@ def knn(X_train, X_test, y_train, y_test, desc="", N=-1):
 
     return accuracy,y_pred, num_feats
 
+# The knn_ function is a simplified version with fixed K for ensemble model integration
 def knn_(X_train, X_test, y_train, y_test, K):
 
         

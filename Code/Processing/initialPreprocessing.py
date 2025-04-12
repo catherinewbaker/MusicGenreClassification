@@ -1,3 +1,27 @@
+"""
+Purpose: Handles data preprocessing and preparation of the FMA dataset for music genre classification,
+         including loading, cleaning, normalizing features, and preparing training/testing splits.
+
+Key Functions:
+- gen_Train_and_Test(): Generates train/test splits with flexible feature selection options
+- top_tracks(): Loads and processes basic track metadata
+- top_echonest_tracks(): Loads and merges track metadata with Echonest audio features
+- top_tracks_final(): Comprehensive preprocessing returning 4 dataset variants (basic, with dates, with Echonest, with both)
+- top_n_genre_tracks(): Filters dataset to include only the N most common genres
+- get_genre_info(): Provides statistical analysis of genre distribution
+- genres(): Loads raw genre metadata
+
+Notes:
+- Handles multiple data formats including basic track metadata and Echonest audio features
+- Provides flexible preprocessing options including:
+  * Genre label encoding (labeled 1-16)
+  * Date normalization (converting to days since first recording)
+  * Feature normalization using MinMaxScaler
+  * Genre limiting (default: Rock, Experimental, Electronic, Hip-Hop, Folk, Pop)
+  * Allow for custom feature combinations
+- All numerical features are normalized to [0,1] range for consistent model training
+"""
+
 import os
 import numpy as np
 import pandas as pd
@@ -6,7 +30,8 @@ import math
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 
-
+# Generates train/test splits with specified features and optional subsetting
+# Returns X_train, X_test, y_train, y_test
 def gen_Train_and_Test(data,feature, subset,processed_X=None,feature_combination=[]):
     if(subset != 0):
         dataset = data.sample(n=subset,random_state=42)
@@ -46,6 +71,8 @@ def gen_Train_and_Test(data,feature, subset,processed_X=None,feature_combination
 
     return X_train,X_test,y_train,y_test
 
+# Loads and processes basic track metadata with optional date processing
+# Returns DataFrame of processed tracks with genre labels
 def top_tracks(daterecorded=False):
     track_headers = pd.read_csv('fma_metadata/tracks.csv',nrows=3, header=None)
     new_track_headers = []
@@ -78,6 +105,8 @@ def top_tracks(daterecorded=False):
 
     return topg_tracks
 
+# Loads and merges track metadata with Echonest audio features
+# Returns DataFrame of tracks with Echonest features and genre labels
 def top_echonest_tracks(daterecorded=False):
     topg_tracks = top_tracks()
 
@@ -116,6 +145,8 @@ def top_echonest_tracks(daterecorded=False):
 
     return topg_echo_merged
 
+# Filters dataset to include only the N most common genres
+# Returns DataFrame of tracks from top N genres with genre labels
 def top_n_genre_tracks(n):
     track_headers = pd.read_csv('fma_metadata/tracks.csv',nrows=3, header=None)
     new_track_headers = []
@@ -143,6 +174,8 @@ def top_n_genre_tracks(n):
     
     return topg_tracks
 
+# Analyzes and outputs genre distribution statistics
+# Returns Dictionary of genre counts
 def get_genre_info(tracks, output=True):
     genre_counts = tracks['track_genre_top'].value_counts()
 
@@ -157,6 +190,8 @@ def get_genre_info(tracks, output=True):
     
     return genre_counts
 
+# Comprehensive preprocessing returning 4 dataset variants
+# Returns (basic_tracks, tracks_with_dates, tracks_with_echo, tracks_with_both)
 def top_tracks_final(genre_lim = True):
     track_headers = pd.read_csv('fma_metadata/tracks.csv',nrows=3, header=None)
     new_track_headers = []
@@ -220,6 +255,8 @@ def top_tracks_final(genre_lim = True):
 
     return topg_tracks, topg_tracks_w_date, topg_echo_merged, topg_echo_merged_w_date
 
+# Loads raw genre metadata
+# Returns DataFrame of genre information
 def genres():
     genre_info = pd.read_csv('fma_metadata/genres.csv')
     return genre_info

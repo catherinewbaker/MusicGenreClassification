@@ -1,3 +1,28 @@
+"""
+Purpose: Testing different multi-feature model combinations and configurations with echonest data
+         including single-feature analysis, feature combinations, and integration with other feature types.
+
+Key Feature Sets:
+1. EchoNest Audio Features:
+   - acousticness, danceability, energy
+   - instrumentalness, liveness, speechiness
+   - tempo, valence
+
+2. Combined Feature Sets:
+   - EchoNest + Basic Track Features (duration, listens, favorites)
+   - EchoNest + Track Names (TF-IDF vectorized)
+   - EchoNest + Recording Date
+   - All Features Combined
+
+Model Configurations:
+- SGD (primary model)
+- NB and KNN (commented alternatives)
+
+Notes:
+- Currently configured for EchoNest + Track Name analysis
+- Other configurations preserved as commented sections for reference
+"""
+
 from initialPreprocessing import gen_Train_and_Test, top_tracks, top_echonest_tracks
 import pandas as pd
 from svm import svm

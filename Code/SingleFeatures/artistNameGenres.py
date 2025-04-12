@@ -1,5 +1,17 @@
-# identical to artistName.py except removing duplicates in the artistName feature
-# aims to reduce the impact of 1-to-1 mapping of genre to artist
+"""
+Purpose: Analyzes the relationship between artists and their associated genres,
+         specifically focusing on removing duplicate genre mappings per artist
+         to reduce one-to-one mapping bias in the dataset.
+
+Key Functions:
+- main(): Creates a dictionary of artist-to-genre mappings and outputs results to
+          'artist_genre_mappings.txt'
+          
+Notes:
+- Outputs mappings to a text file for further analysis
+- Helps reduce bias in cases where artists are strongly associated with single genres
+"""
+
 from initialPreprocessing import gen_Train_and_Test, top_tracks
 import pandas as pd
 from sklearn.model_selection import train_test_split

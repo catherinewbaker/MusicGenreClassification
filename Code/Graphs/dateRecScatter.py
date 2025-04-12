@@ -1,3 +1,21 @@
+"""
+Purpose: Analyzes and visualizes the distribution of music tracks across recording dates, 
+         creating stacked bar plots to show genre distribution over time (1970-2020).
+
+Key Functions:
+- top_tracks(daterecorded=False): 
+    Loads and preprocesses track data with optional date handling.
+    Returns cleaned DataFrame with genre labels.
+
+- plot_date_recorded_distribution(data, feature='track_date_recorded', genre_column='genre_label'): 
+    Creates stacked bar visualization showing genre distribution over time.
+    Handles five main genres: Rock, Electronic, Hip-Hop, Folk, Pop.
+
+Notes:
+- Implements date normalization relative to earliest recording
+- Handles missing dates and ensures consistent year range (1970-2020)
+"""
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from initialPreprocessing import top_tracks
@@ -45,6 +63,12 @@ def plot_date_recorded_distribution(data, feature='track_date_recorded', genre_c
     # Group filtered data by year and genre, and count occurrences
     grouped_data = filtered_data.groupby([filtered_data[feature].dt.year, genre_column])[genre_column].count().unstack(fill_value=0)
 
+    # Reindex the grouped data with a full range of years
+    min_year = 1970
+    max_year = 2020
+    full_year_range = range(min_year, max_year + 1)
+    grouped_data = grouped_data.reindex(full_year_range, fill_value=0)
+
     # Create a color map for genres
     unique_genres = filtered_data[genre_column].unique()
     genre_colors = {genre: plt.cm.tab10(i) for i, genre in enumerate(unique_genres)}
@@ -64,7 +88,14 @@ def plot_date_recorded_distribution(data, feature='track_date_recorded', genre_c
     ax.set_xlabel('Year')
     ax.set_ylabel('Frequency')
     ax.legend(title=genre_column)
-    plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
+
+    # Set x-axis ticks to label only the years
+    year_starts = pd.date_range(start=f'{min_year}-01-01', end=f'{max_year + 1}-01-01', freq='YS')
+    plt.xticks(year_starts, [str(year) for year in range(min_year, max_year + 2)], rotation=45)
+
+    # Set the y-axis limit to accommodate the maximum frequency
+    ax.set_ylim(0, 100)  # Adjust as needed
+
     plt.tight_layout()
     plt.show()
 

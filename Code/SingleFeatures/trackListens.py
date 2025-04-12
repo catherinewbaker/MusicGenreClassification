@@ -1,3 +1,12 @@
+"""
+Purpose: Evaluates track listen counts as a single feature for genre classification,
+         analyzing if popularity metrics correlate with music genres.
+
+Key Functions:
+- main(): Processes track listen count data and evaluates classification performance
+          using multiple models (SGD, KNN, Naive Bayes)
+"""
+
 from initialPreprocessing import gen_Train_and_Test, top_tracks
 import pandas as pd
 from svm import svm

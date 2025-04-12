@@ -1,7 +1,26 @@
+"""
+Purpose: Implements Stochastic Gradient Descent classification with configurable loss functions
+         (hinge loss for SVM-like behavior and modified huber loss for probability estimates).
+
+Key Functions:
+- sgd(X_train, X_test, y_train, y_test, desc=""): 
+    Main implementation with full metrics reporting.
+    Returns accuracy and predictions.
+
+- sgd_(X_train, X_test, y_train, y_test, hard=True): 
+    Configurable version with loss function selection.
+    Returns classifier and predictions.
+    hard=True uses hinge loss, False uses modified huber loss.
+
+Notes:
+- Uses sklearn's SGDClassifier with fixed random state for reproducibility
+- Provides detailed classification metrics for model evaluation
+"""
+
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import accuracy_score, classification_report
 
-
+# The sgd function provides full metrics reporting for standalone model evaluation
 def sgd(X_train, X_test, y_train, y_test, desc=""):
     print("\n\n\nSGD"+desc+":\n")
     print(str(X_train.shape[1]) + " features")
@@ -22,6 +41,7 @@ def sgd(X_train, X_test, y_train, y_test, desc=""):
 
     return accuracy,y_pred
 
+# The sgd_ function is a configurable version for flexible loss selection and ensemble integration 
 def sgd_(X_train, X_test, y_train, y_test, hard=True):
     print("\n\n\nSGD\n")
     print(str(X_train.shape[1]) + " features")
